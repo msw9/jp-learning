@@ -2,14 +2,17 @@ import random
 import spacy
 import pandas as pd
 import re
+from fugashi import Tagger
 """
 générer des cartes anki texte à trou
+- v 2.0 tokenization avec fugashi pour éviter erreur comme 「ところ」au lieu de　「ころ」 
 """
 # variables
 deck = {}
 nlp = spacy.load('ja_core_news_sm',disable=['ner','tagger'])
 particles = {'から','まで','までに','より','ほど','くらい','ぐらい','ころ','ごろ','ばかり'}
 max_length = 16383
+tagger = Tagger()
 
 #fonctions
 def question(texte, particles):
@@ -27,7 +30,9 @@ with open ('ikebukuro.txt', encoding='utf-8') as f:
 
 chunks = [livre[i:i+max_length] for i in range(0,len(livre),max_length)]
 doc = nlp(random.choice(chunks))
-phrases = [sent.text for sent in doc.sents if any(particle in sent.text for particle in particles)]
+# phrases = [sent.text for sent in doc.sents if any(particle in sent.text for particle in particles)]
+phrases = [sent.text for sent in doc.sents]
+phrases = [phrase for phrase in phrases if any(particle in [word.surface for word in tagger(phrase)] for particle in particles)]
 dix_phrases = random.sample(phrases, 10)
 deck['question'] = [question(phrase, particles) for phrase in dix_phrases]
 deck['answer'] = [answer(phrase, particles) for phrase in dix_phrases]
