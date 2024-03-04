@@ -5,7 +5,8 @@ import re
 from fugashi import Tagger
 """
 générer des cartes anki texte à trou
-- v 2.0 tokenization avec fugashi pour éviter erreur comme 「ところ」au lieu de　「ころ」 
+- v 2.0 tokenization avec fugashi pour éviter erreur comme 「ところ」au lieu de　「ころ」
+- v 2.1 utiliser des générateurs au lieu de liste de compréhensions pour économiser mémoire
 """
 # variables
 deck = {}
@@ -27,8 +28,8 @@ def answer(texte, particles):
 
 def make_quizz(phrases): #list
     deck = {}
-    deck['question'] = [question(phrase, particles) for phrase in phrases]
-    deck['answer'] = [answer(phrase, particles) for phrase in phrases]
+    deck['question'] = (question(phrase, particles) for phrase in phrases)
+    deck['answer'] = (answer(phrase, particles) for phrase in phrases)
     df = pd.DataFrame.from_dict(deck)
     df.to_csv('quizz_jp.csv', index=False, header=False,sep='\t')
 #main
@@ -42,6 +43,7 @@ phrases = [phrase for phrase in phrases if any(particle in [word.surface for wor
 
 try:
     dix_phrases = random.sample(phrases,10)
+    # dix_phrases = random.sample((phrase for phrase in phrases), 10)
     make_quizz(dix_phrases)
 except:
     if phrases == []:
