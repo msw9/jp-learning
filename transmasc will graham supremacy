@@ -1,0 +1,42 @@
+
+"""
+wanted to use pastebin.com (without account) to share my results but apparently 'trans' is an 'offensive word' or something so i use that total dustbin of a gihtub repo instead. enjoy nerdy fannibals!
+"""
+import asyncio
+import aiohttp
+from bs4 import BeautifulSoup
+from collections import Counter
+
+async def extract_trans_tags(session, url):
+    async with session.get(url) as response:
+        webpage = BeautifulSoup(await response.text(), 'html.parser')
+        all_tags = webpage.find_all('a', class_='tag')
+        
+        trans_tags = [tag.text for tag in all_tags if 'trans' in tag.text.lower()]
+        ftm_tags = [tag.text for tag in all_tags if 'ftm' in tag.text.lower()]
+        
+        return trans_tags + ftm_tags
+
+async def fetch_all_tags():
+    trans_tags = []
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for i in range(1, 1981):  # Looping through 1979 pages
+            url = f"https://archiveofourown.org/tags/Hannibal%20(TV)/works?page={i}"
+            tasks.append(extract_trans_tags(session, url))
+        
+        results = await asyncio.gather(*tasks)
+        for result in results:
+            trans_tags.extend(result)
+    
+    return trans_tags
+
+# Main
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    trans_tags = loop.run_until_complete(fetch_all_tags())
+    print(dict(Counter(trans_tags)))
+    print(len(trans_tags))
+    
+# Output:{'Trans Character': 17, 'Trans Will Graham': 72, 'Trans Margot Verger': 1, 'Implied Transphobia': 1, 'Forced Gender Transition': 1, 'FTM Will Graham': 10, 'Перевод на русский | Translation in Russian': 22, 'Transformation': 6, 'Trans Male Character': 36, 'Trans Female Character': 8, 'Trans Hannibal Lecter': 26, 'hannibal Lecter comes to terms with being trans': 1, '中文翻译 | Translation in Chinese': 12, 'Trans Male Reader': 1, 'Trans Adam Raki': 5, 'Isekai and Transmigration': 2, 'Transmasc reader': 3, 'Reverse Isekai and Transmigration': 1, 'Do Not Translate or Repost': 1, 'FTM': 2, 'Transphobia': 6, 'Translation': 1, 'Author is trans': 2, 'Transgender Will Graham': 1, 'Pre-operation Transmasc character': 1, 'Trans Dale Cooper (Twin Peaks)': 1, 'Because in all my fics Adam is trans and I need this to be known': 1, 'author is a trans man': 1, 'transphobia mentions': 1, 'Trans': 2, 'trans fetishization': 1, 'trans author': 1, 'Trans Male Adam Towers': 1, 'Trans Pregnancy': 1, "characters don't talk about gender but imagine everyone is cozy beneath the trans umbrella": 1, 'Using the translator is always an option': 1, 'Unprofessional Translation in English': 1, 'Hannibal Lecter/ftm reader': 1, 'Jürgen Voller/FTM Reader': 1, 'FTM Hannibal Lecter': 2, 'Implied trans Margot': 2, 'Transmasculine Margot Verger': 2, 'Animal Transformation': 3, 'Period Typical Transphobia': 1, 'ftm character': 1, 'Transman': 1, 'Transwoman': 1, 'transformations': 1, 'Trans!Will Graham': 1, 'Human Transmutation': 1, 'Trans Character by a Trans Author': 1, 'is it fellatio if he’s trans and has a pussy but also a t-dick': 1, 'trans character written by a trans author': 1, 'Will Is Transported Into The Omega Verse': 1, 'Transvestite': 1, 'Trans Will': 1, 'Dramatic Transatlantic Journeys': 1, 'Hover Translations': 1, 'This work is a translation': 1, 'Character Transformation': 1, "hannibal's own transformation": 1, 'other trans characters': 1, 'Transfiguration Professor Will Graham': 1, 'trans male will': 1, 'Mood transference': 1}
+# Output: 285
